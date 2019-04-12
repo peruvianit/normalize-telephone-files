@@ -4,7 +4,7 @@
 package it.pervuvianit.aura.normalize.factory.impl;
 
 import static it.pervuvianit.aura.normalize.constant.AppConstant.SEPARATOR_EXTENSION_CSV_TIM;
-import static it.pervuvianit.aura.normalize.constant.AppConstant.TELEPHONE_MANAGER_FASTWEB;
+import static it.pervuvianit.aura.normalize.constant.AppConstant.TELEPHONE_MANAGER_TIM;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,7 +101,7 @@ public class TelephoneManagerTim extends TelephoneManagerCsvBase<CSVTim> impleme
 			
 			CSVTelephoneManagerInfoGeneral csvTelephoneManagerInfoGeneral = new CSVTelephoneManagerInfoGeneral();
 			
-			csvTelephoneManagerInfoGeneral.setGestore(TELEPHONE_MANAGER_FASTWEB);			
+			csvTelephoneManagerInfoGeneral.setGestore(TELEPHONE_MANAGER_TIM);			
 			csvTelephoneManagerInfoGeneral.setUtenza(csvTim.getImpianto());
 			csvTelephoneManagerInfoGeneral.setCodiceFiscale(csvTim.getCodiceFiscale());
 			csvTelephoneManagerInfoGeneral.setFattura(csvTim.getFattura());
