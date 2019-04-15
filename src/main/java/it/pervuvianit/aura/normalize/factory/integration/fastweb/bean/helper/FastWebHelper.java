@@ -3,9 +3,16 @@
  */
 package it.pervuvianit.aura.normalize.factory.integration.fastweb.bean.helper;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
+import it.pervuvianit.aura.normalize.exception.FastWebHelperException;
 import it.pervuvianit.aura.normalize.factory.integration.fastweb.bean.CSVFastWeb.FatturaInfo;
 import it.pervuvianit.aura.normalize.factory.integration.fastweb.bean.CSVFastWeb.RiepilogoFattura;
 
@@ -239,6 +246,38 @@ public final class FastWebHelper {
 		}
 		
 		return value;
+	}
+	
+	/**
+	 * 
+	 * @param sDataInzio
+	 * @param sDataFine
+	 * 
+	 * @return ritorna il Bimestre in base al calcolo delle date inizio e data fine del Livello 3
+	 */
+	public static String calcoloBimestre(String sDataInzio, String sDataFine) {
+		if (StringUtils.isAllBlank(sDataInzio, sDataFine)) {
+			throw new FastWebHelperException("Il calcolo per il bimestre, non puo essere effettuato : dataInizio [" +  sDataInzio + "] - dataFine [" + sDataFine + "]");
+		}
+		
+		DateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+		try {
+			Date dataInizio = sdf.parse(sDataInzio);
+			Date dataFine = sdf.parse(sDataFine);
+			
+			System.out.println(dataInizio + " :: " + dataFine);
+		} catch (ParseException e) {
+			throw new FastWebHelperException(e);
+		}
+		
+		return "----";
+	}
+	
+	
+	public static String formatToDateInvoiceDate(String invioceDate) {
+		return invioceDate.substring(6,8) + "/" +
+			   invioceDate.substring(4,6) + "/" +
+			   invioceDate.substring(0,4);
 	}
 	
 }

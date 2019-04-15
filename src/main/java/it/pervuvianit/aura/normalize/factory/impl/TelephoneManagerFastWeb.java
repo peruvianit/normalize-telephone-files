@@ -5,6 +5,7 @@ package it.pervuvianit.aura.normalize.factory.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -255,6 +256,8 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 		LinkedList<FatturaInfo>  linkedListFatturaInfo = csvFastWeb.getLinkedListFatturaInfo();
 		Map<String, RiepilogoFattura> mapRiepilogoFattura = csvFastWeb.getMapRiepilogoFattura();
 		
+		Map<String, BigDecimal> mapTotaleFattura = new HashMap<String, BigDecimal>();
+		
 		if ( csvFastWeb != null ) {
 			
 			String version = FastWebHelper.version(linkedListFatturaInfo,true);
@@ -300,6 +303,18 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 					continue;
 				}
 				
+				String numIdent = dettaglioFattura.getNumIdent();
+				
+				String costo = dettaglioFattura.getCosto();
+				
+				if ( mapTotaleFattura.get(numIdent) != null ) {
+					BigDecimal tmpTotale = mapTotaleFattura.get(numIdent).add(convertStringToBigDecimal(costo));
+					mapTotaleFattura.remove(numIdent);
+					mapTotaleFattura.put(numIdent, tmpTotale);
+				}else {
+					mapTotaleFattura.put(numIdent, convertStringToBigDecimal(costo));
+				}
+				
 				LinkedList<DettaglioConsumo> linkedListDettaglioConsumo = new LinkedList<>();
 				
 				DettaglioFattura dettaglioFatturaConsumo = null;
@@ -307,7 +322,7 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 				String durata = dettaglioFattura.getDurata();
 				
 				if ( !StringUtils.isBlank(durata) && !durata.equals("0:00:00")) {
-					dettaglioFatturaConsumo = csvFastWeb.getMapDettaglioFattura().get(dettaglioFattura.getNumIdent());
+					dettaglioFatturaConsumo = csvFastWeb.getMapDettaglioFattura().get(numIdent);
 				}
 				
 				if ( dettaglioFatturaConsumo != null ) {
@@ -373,7 +388,7 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 					csvFastWebOutput.setDataAttiv(dettaglioFattura.getDataAttiv());
 					csvFastWebOutput.setDataInizio(dettaglioFattura.getDataInizio());
 					csvFastWebOutput.setDataFine(dettaglioFattura.getDataFine());
-					csvFastWebOutput.setCosto(dettaglioFattura.getCosto());
+					csvFastWebOutput.setCosto(costo);
 					csvFastWebOutput.setAliqIVA(dettaglioFattura.getAliqIVA());
 					csvFastWebOutput.setCodIVA(dettaglioFattura.getCodIVA());
 					csvFastWebOutput.setNumUtenza(dettaglioFattura.getNumUtenza());
@@ -422,7 +437,7 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 			}
 		}
 		
-		LinkedList<CSVTelephoneManagerInfoGeneral> linkedListCSVTelephoneManagerInfoGeneral = telephoneManagerInfoGeneral(linkedListcsvFastWebOutput);
+		LinkedList<CSVTelephoneManagerInfoGeneral> linkedListCSVTelephoneManagerInfoGeneral = telephoneManagerInfoGeneral(linkedListcsvFastWebOutput, mapTotaleFattura);
 		
 		super.generaFattureCSV(linkedListCSVTelephoneManagerInfoGeneral);
 		generaFattureDettaglioCSV(linkedListcsvFastWebOutput);
@@ -431,7 +446,7 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 		
 	}
 
-	public LinkedList<CSVTelephoneManagerInfoGeneral> telephoneManagerInfoGeneral(LinkedList<CSVFastWebOutput> linkedListcsvFastWebOutput) {
+	public LinkedList<CSVTelephoneManagerInfoGeneral> telephoneManagerInfoGeneral(LinkedList<CSVFastWebOutput> linkedListcsvFastWebOutput, Map<String, BigDecimal> mapTotaleFattura) {
 		
 		LinkedList<CSVTelephoneManagerInfoGeneral> linkedListCSVTelephoneManagerInfoGeneral = new LinkedList<CSVTelephoneManagerInfoGeneral>();
 		
@@ -449,13 +464,13 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 			CSVTelephoneManagerInfoGeneral csvTelephoneManagerInfoGeneral = new CSVTelephoneManagerInfoGeneral();
 			
 			csvTelephoneManagerInfoGeneral.setGestore(TELEPHONE_MANAGER_FASTWEB);			
-			csvTelephoneManagerInfoGeneral.setUtenza(csvFastWebOutput.getNumIdent());
+			csvTelephoneManagerInfoGeneral.setUtenza(numIdent);
 			csvTelephoneManagerInfoGeneral.setCodiceFiscale(csvFastWebOutput.getCodiceFiscale());
 			csvTelephoneManagerInfoGeneral.setFattura(csvFastWebOutput.getInvoiceID());
-			csvTelephoneManagerInfoGeneral.setImporto(null);
+			csvTelephoneManagerInfoGeneral.setImporto(mapTotaleFattura.get(numIdent).toString().replace(".", ","));
 			csvTelephoneManagerInfoGeneral.setIndirizzo(csvFastWebOutput.getIndirizzo());
-			csvTelephoneManagerInfoGeneral.setDataEmissione(csvFastWebOutput.getInvoiceDate());
-			csvTelephoneManagerInfoGeneral.setBimestre(null);
+			csvTelephoneManagerInfoGeneral.setDataEmissione(FastWebHelper.formatToDateInvoiceDate(csvFastWebOutput.getInvoiceDate()));
+			csvTelephoneManagerInfoGeneral.setBimestre(FastWebHelper.calcoloBimestre(csvFastWebOutput.getDataInizio(), csvFastWebOutput.getDataFine()));
 			
 			linkedListCSVTelephoneManagerInfoGeneral.add(csvTelephoneManagerInfoGeneral);
 		}
@@ -493,5 +508,10 @@ public class TelephoneManagerFastWeb extends TelephoneManagerBase implements ITe
 			}
 		}
 		return cellValue; 
+	}
+	
+	private BigDecimal convertStringToBigDecimal(String costo) {
+		BigDecimal value = new BigDecimal(costo.replace(".","").replace(",", "."));
+		return value;
 	}
 }
